@@ -1,0 +1,4 @@
+package fiap.hydrata.exception;
+
+public record FieldErrorDetail(String field, String message) {
+}
