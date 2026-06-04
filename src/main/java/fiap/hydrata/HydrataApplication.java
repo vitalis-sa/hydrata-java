@@ -3,6 +3,9 @@ package fiap.hydrata;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -17,7 +20,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
             name = "Vitalis",
             url = "https://github.com/vitalis-sa/hydrata-java"
         )
-    )
+    ),
+    security = @SecurityRequirement(name = "Bearer Authentication")
+)
+@SecurityScheme(
+    name = "Bearer Authentication",
+    type = SecuritySchemeType.HTTP,
+    bearerFormat = "JWT",
+    scheme = "bearer"
 )
 @SpringBootApplication(exclude = { org.springdoc.core.configuration.SpringDocHateoasConfiguration.class })
 @EnableScheduling
