@@ -78,10 +78,9 @@ public class AlertaService {
 
     @Transactional
     public void avaliarEGerar(Sensor sensor) {
-        List<fiap.hydrata.entity.Leitura> leituras = leituraRepository.findBySensorId(sensor.getId());
-        if (leituras.isEmpty()) return;
-
-        fiap.hydrata.entity.Leitura ultima = leituras.get(leituras.size() - 1);
+        fiap.hydrata.entity.Leitura ultima = leituraRepository.findFirstBySensorIdOrderByIdDesc(sensor.getId())
+                .orElse(null);
+        if (ultima == null) return;
 
         if (ultima.getUmidadeAr() != null && ultima.getUmidadeAr().doubleValue() < 40.0) {
             Alerta alerta = Alerta.builder()
@@ -100,8 +99,10 @@ public class AlertaService {
     }
 
     public void processarStatusIot(StatusPayload status) {
+        log.info("[DEBUG-MQTT] Recebido status IoT - Bomba Ativa: {}, Alerta Crítico: {}", 
+                status.bombaAtiva(), status.alertaCritico());
         if (Boolean.TRUE.equals(status.alertaCritico())) {
-            log.warn("Status IoT indicou alerta crítico — aguardando avaliação do scheduler");
+            log.warn("[DEBUG-MQTT] Status IoT indicou alerta crítico — aguardando avaliação do scheduler");
         }
     }
 }

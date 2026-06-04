@@ -14,12 +14,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LeituraService {
 
     private final LeituraRepository repository;
@@ -67,27 +69,45 @@ public class LeituraService {
 
     @Transactional
     public void salvarDeClima(ClimaPayload clima) {
-        sensorRepository.findAll().stream().findFirst().ifPresent(sensor -> {
-            Leitura leitura = Leitura.builder()
-                    .sensor(sensor)
-                    .temperatura(clima.temperatura() != null ? BigDecimal.valueOf(clima.temperatura()) : null)
-                    .umidadeAr(clima.umidadeAr() != null ? BigDecimal.valueOf(clima.umidadeAr()) : BigDecimal.ZERO)
-                    .dataLeitura(LocalDateTime.now())
-                    .build();
-            repository.save(leitura);
-        });
+        log.info("[DEBUG-MQTT] Tentando salvar dados de CLIMA: {}", clima);
+        var sensores = sensorRepository.findAll();
+        if (sensores.isEmpty()) {
+            log.warn("[DEBUG-MQTT] NENHUM SENSOR CADASTRADO NO BANCO! Ignorando a leitura de clima.");
+            return;
+        }
+        
+        var sensor = sensores.get(0);
+        log.info("[DEBUG-MQTT] Associando leitura de clima ao sensor ID: {}", sensor.getId());
+        
+        Leitura leitura = Leitura.builder()
+                .sensor(sensor)
+                .temperatura(clima.temperatura() != null ? BigDecimal.valueOf(clima.temperatura()) : null)
+                .umidadeAr(clima.umidadeAr() != null ? BigDecimal.valueOf(clima.umidadeAr()) : BigDecimal.ZERO)
+                .dataLeitura(LocalDateTime.now())
+                .build();
+        repository.save(leitura);
+        log.info("[DEBUG-MQTT] Leitura de clima persistida com SUCESSO no banco!");
     }
 
     @Transactional
     public void salvarDeLuz(LuzPayload luz) {
-        sensorRepository.findAll().stream().findFirst().ifPresent(sensor -> {
-            Leitura leitura = Leitura.builder()
-                    .sensor(sensor)
-                    .umidadeAr(BigDecimal.ZERO)
-                    .luminosidade(luz.luminosidade() != null ? BigDecimal.valueOf(luz.luminosidade()) : null)
-                    .dataLeitura(LocalDateTime.now())
-                    .build();
-            repository.save(leitura);
-        });
+        log.info("[DEBUG-MQTT] Tentando salvar dados de LUZ: {}", luz);
+        var sensores = sensorRepository.findAll();
+        if (sensores.isEmpty()) {
+            log.warn("[DEBUG-MQTT] NENHUM SENSOR CADASTRADO NO BANCO! Ignorando a leitura de luz.");
+            return;
+        }
+        
+        var sensor = sensores.get(0);
+        log.info("[DEBUG-MQTT] Associando leitura de luz ao sensor ID: {}", sensor.getId());
+        
+        Leitura leitura = Leitura.builder()
+                .sensor(sensor)
+                .umidadeAr(BigDecimal.ZERO)
+                .luminosidade(luz.luminosidade() != null ? BigDecimal.valueOf(luz.luminosidade()) : null)
+                .dataLeitura(LocalDateTime.now())
+                .build();
+        repository.save(leitura);
+        log.info("[DEBUG-MQTT] Leitura de luz persistida com SUCESSO no banco!");
     }
 }

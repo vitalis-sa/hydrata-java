@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 @Component
 @RequiredArgsConstructor
@@ -21,11 +22,15 @@ public class MqttMessageListener {
     private final AlertaService alertaService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @ServiceActivator(inputChannel = "mqttInputChannel")
+    @PostConstruct
+    public void init() {
+        log.info("[DEBUG-MQTT] MqttMessageListener inicializado e aguardando mensagens em 'mqttInputChannel'!");
+    }
+
     public void handleMessage(Message<?> message) {
         String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
         String payload = message.getPayload().toString();
-        log.debug("Mensagem MQTT recebida — tópico: {}, payload: {}", topic, payload);
+        log.info("[DEBUG-MQTT] MENSAGEM RECEBIDA DO BROKER - Tópico: {}, Payload: {}", topic, payload);
 
         try {
             if (topic == null) {
