@@ -1,8 +1,8 @@
 package fiap.hydrata.mapper;
 
-import fiap.hydrata.dto.request.SensorRequest;
-import fiap.hydrata.dto.response.SensorResponse;
-import fiap.hydrata.entity.Sensor;
+import fiap.hydrata.dto.request.DispositivoIotRequest;
+import fiap.hydrata.dto.response.DispositivoIotResponse;
+import fiap.hydrata.entity.DispositivoIot;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -10,22 +10,22 @@ import org.mapstruct.MappingTarget;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface SensorMapper {
+public interface DispositivoIotMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "propriedade", ignore = true)
     @Mapping(target = "dataCadastro", ignore = true)
     @Mapping(target = "status", ignore = true)
-    Sensor toEntity(SensorRequest request);
+    DispositivoIot toEntity(DispositivoIotRequest request);
 
     @Mapping(source = "propriedade.nome", target = "nomePropriedade")
-    SensorResponse toResponse(Sensor sensor);
+    DispositivoIotResponse toResponse(DispositivoIot dispositivoIot);
 
-    List<SensorResponse> toResponseList(List<Sensor> list);
+    List<DispositivoIotResponse> toResponseList(List<DispositivoIot> list);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "propriedade", ignore = true)
     @Mapping(target = "dataCadastro", ignore = true)
     @Mapping(target = "status", ignore = true)
-    void updateEntity(SensorRequest request, @MappingTarget Sensor sensor);
+    void updateEntity(DispositivoIotRequest request, @MappingTarget DispositivoIot dispositivoIot);
 }

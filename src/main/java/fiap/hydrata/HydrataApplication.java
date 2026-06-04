@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         title = "HyDrata API — Java Backend",
         version = "1.0.0",
         description = "API de monitoramento hídrico e otimização de irrigação. " +
-                      "Gerencia Propriedades, Sensores, Leituras, Alertas, Fontes Externas e Dados Externos.",
+                      "Gerencia Propriedades, Dispositivos IoT, Leituras, Alertas, Fontes Externas e Dados Externos.",
         contact = @Contact(
             name = "Vitalis",
             url = "https://github.com/vitalis-sa/hydrata-java"

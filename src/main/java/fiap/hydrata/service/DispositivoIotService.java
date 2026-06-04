@@ -1,14 +1,14 @@
 package fiap.hydrata.service;
 
-import fiap.hydrata.dto.request.SensorRequest;
+import fiap.hydrata.dto.request.DispositivoIotRequest;
 import fiap.hydrata.dto.response.DeleteResponse;
-import fiap.hydrata.dto.response.SensorResponse;
-import fiap.hydrata.entity.Sensor;
+import fiap.hydrata.dto.response.DispositivoIotResponse;
+import fiap.hydrata.entity.DispositivoIot;
 import fiap.hydrata.enums.StatusSensor;
 import fiap.hydrata.exception.ResourceNotFoundException;
-import fiap.hydrata.mapper.SensorMapper;
+import fiap.hydrata.mapper.DispositivoIotMapper;
 import fiap.hydrata.repository.PropriedadeRepository;
-import fiap.hydrata.repository.SensorRepository;
+import fiap.hydrata.repository.DispositivoIotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,29 +18,29 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SensorService {
+public class DispositivoIotService {
 
-    private final SensorRepository repository;
-    private final SensorMapper mapper;
+    private final DispositivoIotRepository repository;
+    private final DispositivoIotMapper mapper;
     private final PropriedadeRepository propriedadeRepository;
 
-    public List<SensorResponse> findAll() {
+    public List<DispositivoIotResponse> findAll() {
         return mapper.toResponseList(repository.findAll());
     }
 
-    public SensorResponse findById(Long id) {
+    public DispositivoIotResponse findById(Long id) {
         return repository.findById(id)
                 .map(mapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Sensor não encontrado com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Dispositivo IoT não encontrado com id: " + id));
     }
 
-    public List<Sensor> findSensoresAtivos() {
+    public List<DispositivoIot> findDispositivosIotAtivos() {
         return repository.findByStatus(StatusSensor.ATIVO);
     }
 
     @Transactional
-    public SensorResponse create(SensorRequest request) {
-        Sensor entity = mapper.toEntity(request);
+    public DispositivoIotResponse create(DispositivoIotRequest request) {
+        DispositivoIot entity = mapper.toEntity(request);
         entity.setPropriedade(propriedadeRepository.findById(request.getPropriedadeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Propriedade não encontrada com id: " + request.getPropriedadeId())));
         entity.setStatus(StatusSensor.ATIVO);
@@ -49,9 +49,9 @@ public class SensorService {
     }
 
     @Transactional
-    public SensorResponse update(Long id, SensorRequest request) {
-        Sensor entity = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Sensor não encontrado com id: " + id));
+    public DispositivoIotResponse update(Long id, DispositivoIotRequest request) {
+        DispositivoIot entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Dispositivo IoT não encontrado com id: " + id));
         mapper.updateEntity(request, entity);
         entity.setPropriedade(propriedadeRepository.findById(request.getPropriedadeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Propriedade não encontrada com id: " + request.getPropriedadeId())));
@@ -63,8 +63,8 @@ public class SensorService {
         repository.findById(id)
                 .ifPresentOrElse(
                         repository::delete,
-                        () -> { throw new ResourceNotFoundException("Sensor não encontrado com id: " + id); }
+                        () -> { throw new ResourceNotFoundException("Dispositivo IoT não encontrado com id: " + id); }
                 );
-        return DeleteResponse.of("Sensor", id);
+        return DeleteResponse.of("DispositivoIot", id);
     }
 }

@@ -38,20 +38,29 @@ public class MqttMessageListener {
                 return;
             }
 
-            switch (topic) {
-                case "FIAP/HYDRATA/CLIMA" -> {
+            String[] parts = topic.split("/");
+            if (parts.length < 4) {
+                log.warn("Formato de tópico inválido: {}", topic);
+                return;
+            }
+            
+            String macAddress = parts[2];
+            String type = parts[3];
+
+            switch (type) {
+                case "CLIMA" -> {
                     ClimaPayload clima = objectMapper.readValue(payload, ClimaPayload.class);
-                    leituraService.salvarDeClima(clima);
+                    leituraService.salvarDeClima(clima, macAddress);
                 }
-                case "FIAP/HYDRATA/LUZ" -> {
+                case "LUZ" -> {
                     LuzPayload luz = objectMapper.readValue(payload, LuzPayload.class);
-                    leituraService.salvarDeLuz(luz);
+                    leituraService.salvarDeLuz(luz, macAddress);
                 }
-                case "FIAP/HYDRATA/STATUS" -> {
+                case "STATUS" -> {
                     StatusPayload status = objectMapper.readValue(payload, StatusPayload.class);
-                    alertaService.processarStatusIot(status);
+                    alertaService.processarStatusIot(status, macAddress);
                 }
-                default -> log.warn("Tópico desconhecido: {}", topic);
+                default -> log.warn("Tipo desconhecido no tópico: {}", type);
             }
         } catch (Exception e) {
             log.error("Erro ao processar mensagem MQTT do tópico {}: {}", topic, e.getMessage(), e);

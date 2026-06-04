@@ -20,8 +20,6 @@ public class AlertaResponse {
     @Schema(description = "Nome da propriedade", example = "Fazenda Boa Vista")
     private String nomePropriedade;
 
-    @Schema(description = "ID da leitura relacionada", example = "5")
-    private Long leituraId;
 
     @Schema(description = "ID do dado externo relacionado", example = "3")
     private Long dadoExternoId;

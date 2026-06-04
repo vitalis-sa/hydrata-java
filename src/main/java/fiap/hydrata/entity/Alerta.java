@@ -26,8 +26,12 @@ public class Alerta {
     private Propriedade propriedade;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "LEITURA_ID")
-    private Leitura leitura;
+    @JoinColumn(name = "LEITURA_CLIMA_ID")
+    private LeituraClima leituraClima;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "LEITURA_LUZ_ID")
+    private LeituraLuz leituraLuz;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "DADO_EXTERNO_ID")

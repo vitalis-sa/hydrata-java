@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SensorRequest {
+public class DispositivoIotRequest {
 
     private String modelo;
 

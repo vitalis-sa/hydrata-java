@@ -17,7 +17,7 @@ public class AlertaRequest {
     @Positive(message = "ID da propriedade deve ser positivo")
     private Long propriedadeId;
 
-    private Long leituraId;
+    
 
     private Long dadoExternoId;
 

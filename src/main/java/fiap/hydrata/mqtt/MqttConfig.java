@@ -74,13 +74,13 @@ public class MqttConfig {
         String uniqueClientId = clientId + "-inbound-" + java.util.UUID.randomUUID().toString().substring(0, 8);
         log.info("[DEBUG-MQTT] Criando adaptador MqttPahoMessageDrivenChannelAdapter...");
         log.info("[DEBUG-MQTT] Client ID Único: {}", uniqueClientId);
-        log.info("[DEBUG-MQTT] Tópicos assinados: FIAP/HYDRATA/CLIMA, FIAP/HYDRATA/LUZ, FIAP/HYDRATA/STATUS");
+        log.info("[DEBUG-MQTT] Tópicos assinados: FIAP/HYDRATA/+/CLIMA, FIAP/HYDRATA/+/LUZ, FIAP/HYDRATA/+/STATUS");
         
         MqttPahoMessageDrivenChannelAdapter adapter = new MqttPahoMessageDrivenChannelAdapter(
                 uniqueClientId, factory,
-                "FIAP/HYDRATA/CLIMA",
-                "FIAP/HYDRATA/LUZ",
-                "FIAP/HYDRATA/STATUS"
+                "FIAP/HYDRATA/+/CLIMA",
+                "FIAP/HYDRATA/+/LUZ",
+                "FIAP/HYDRATA/+/STATUS"
         );
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());

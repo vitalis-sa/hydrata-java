@@ -7,16 +7,16 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "SENSOR")
+@Table(name = "DISPOSITIVO_IOT")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Sensor {
+public class DispositivoIot {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sensor_seq")
-    @SequenceGenerator(name = "sensor_seq", sequenceName = "SQ_SENSOR", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dispositivo_iot_seq")
+    @SequenceGenerator(name = "dispositivo_iot_seq", sequenceName = "SQ_DISPOSITIVO_IOT", allocationSize = 1)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
