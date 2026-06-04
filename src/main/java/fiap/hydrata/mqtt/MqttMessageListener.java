@@ -30,7 +30,7 @@ public class MqttMessageListener {
     public void handleMessage(Message<?> message) {
         String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
         String payload = message.getPayload().toString();
-        log.info("[DEBUG-MQTT] MENSAGEM RECEBIDA DO BROKER - Tópico: {}, Payload: {}", topic, payload);
+        log.info("📡 [MQTT IN] {} | Payload: {}", topic, payload);
 
         try {
             if (topic == null) {
@@ -40,7 +40,7 @@ public class MqttMessageListener {
 
             String[] parts = topic.split("/");
             if (parts.length < 4) {
-                log.warn("Formato de tópico inválido: {}", topic);
+                log.warn("⚠️ [MQTT ERR] Formato inválido: {}", topic);
                 return;
             }
             
@@ -60,10 +60,10 @@ public class MqttMessageListener {
                     StatusPayload status = objectMapper.readValue(payload, StatusPayload.class);
                     alertaService.processarStatusIot(status, macAddress);
                 }
-                default -> log.warn("Tipo desconhecido no tópico: {}", type);
+                default -> log.warn("⚠️ [MQTT ERR] Tipo desconhecido: {}", type);
             }
         } catch (Exception e) {
-            log.error("Erro ao processar mensagem MQTT do tópico {}: {}", topic, e.getMessage(), e);
+            log.error("❌ [MQTT ERR] Erro ao processar: {}", e.getMessage());
         }
     }
 }

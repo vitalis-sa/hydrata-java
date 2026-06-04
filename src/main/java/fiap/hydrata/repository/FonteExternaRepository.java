@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FonteExternaRepository extends JpaRepository<FonteExterna, Long> {
+    java.util.Optional<FonteExterna> findByNome(String nome);
 }

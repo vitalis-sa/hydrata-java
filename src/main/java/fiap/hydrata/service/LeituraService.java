@@ -27,17 +27,14 @@ public class LeituraService {
 
     @Transactional
     public void salvarDeClima(ClimaPayload clima, String macAddress) {
-        log.info("[DEBUG-MQTT] Tentando salvar dados de CLIMA para MAC: {}", macAddress);
         var dispositivoOpt = dispositivoIotRepository.findByMacAddress(macAddress);
         
         if (dispositivoOpt.isEmpty()) {
-            log.warn("[DEBUG-MQTT] Dispositivo com MAC {} NÃO ENCONTRADO! Ignorando a leitura de clima.", macAddress);
+            log.warn("❌ [DB REJECT] Leitura de CLIMA ignorada! MAC '{}' não está cadastrado.", macAddress);
             return;
         }
         
         var dispositivo = dispositivoOpt.get();
-        log.info("[DEBUG-MQTT] Associando leitura de clima ao dispositivo ID: {}", dispositivo.getId());
-        
         LeituraClima leitura = LeituraClima.builder()
                 .dispositivoIot(dispositivo)
                 .temperatura(clima.temperatura() != null ? BigDecimal.valueOf(clima.temperatura()) : BigDecimal.ZERO)
@@ -46,22 +43,19 @@ public class LeituraService {
                 .build();
                 
         climaRepository.save(leitura);
-        log.info("[DEBUG-MQTT] Leitura de clima persistida com SUCESSO no banco!");
+        log.info("☁️  [DB PERSIST] Leitura CLIMA salva com SUCESSO (Disp ID: {})", dispositivo.getId());
     }
 
     @Transactional
     public void salvarDeLuz(LuzPayload luz, String macAddress) {
-        log.info("[DEBUG-MQTT] Tentando salvar dados de LUZ para MAC: {}", macAddress);
         var dispositivoOpt = dispositivoIotRepository.findByMacAddress(macAddress);
         
         if (dispositivoOpt.isEmpty()) {
-            log.warn("[DEBUG-MQTT] Dispositivo com MAC {} NÃO ENCONTRADO! Ignorando a leitura de luz.", macAddress);
+            log.warn("❌ [DB REJECT] Leitura de LUZ ignorada! MAC '{}' não está cadastrado.", macAddress);
             return;
         }
         
         var dispositivo = dispositivoOpt.get();
-        log.info("[DEBUG-MQTT] Associando leitura de luz ao dispositivo ID: {}", dispositivo.getId());
-        
         LeituraLuz leitura = LeituraLuz.builder()
                 .dispositivoIot(dispositivo)
                 .luminosidade(luz.luminosidade() != null ? BigDecimal.valueOf(luz.luminosidade()) : BigDecimal.ZERO)
@@ -69,6 +63,6 @@ public class LeituraService {
                 .build();
                 
         luzRepository.save(leitura);
-        log.info("[DEBUG-MQTT] Leitura de luz persistida com SUCESSO no banco!");
+        log.info("☀️  [DB PERSIST] Leitura LUZ salva com SUCESSO (Disp ID: {})", dispositivo.getId());
     }
 }

@@ -1,27 +1,24 @@
 package fiap.hydrata.service;
 
+import fiap.hydrata.client.AnaHidroClient;
+import fiap.hydrata.client.InpeBdqueimadasClient;
 import fiap.hydrata.dto.request.AlertaRequest;
 import fiap.hydrata.dto.response.AlertaResponse;
 import fiap.hydrata.dto.response.DeleteResponse;
-import fiap.hydrata.entity.Alerta;
-import fiap.hydrata.entity.DispositivoIot;
-import fiap.hydrata.entity.LeituraClima;
-import fiap.hydrata.entity.LeituraLuz;
+import fiap.hydrata.entity.*;
 import fiap.hydrata.enums.NivelRisco;
 import fiap.hydrata.enums.StatusAlerta;
 import fiap.hydrata.enums.TipoAlerta;
 import fiap.hydrata.exception.ResourceNotFoundException;
 import fiap.hydrata.mapper.AlertaMapper;
 import fiap.hydrata.mqtt.payload.StatusPayload;
-import fiap.hydrata.repository.AlertaRepository;
-import fiap.hydrata.repository.LeituraClimaRepository;
-import fiap.hydrata.repository.LeituraLuzRepository;
-import fiap.hydrata.repository.PropriedadeRepository;
+import fiap.hydrata.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,6 +32,11 @@ public class AlertaService {
     private final PropriedadeRepository propriedadeRepository;
     private final LeituraClimaRepository leituraClimaRepository;
     private final LeituraLuzRepository leituraLuzRepository;
+
+    private final AnaHidroClient anaClient;
+    private final InpeBdqueimadasClient inpeClient;
+    private final DadoExternoRepository dadoExternoRepository;
+    private final FonteExternaRepository fonteExternaRepository;
 
     public List<AlertaResponse> findAll() {
         return mapper.toResponseList(repository.findAll());
@@ -85,31 +87,100 @@ public class AlertaService {
         
         if (ultimaClima == null) return;
 
-        if (ultimaClima.getUmidadeAr() != null && ultimaClima.getUmidadeAr().doubleValue() < 40.0) {
-            String luzStr = (ultimaLuz != null && ultimaLuz.getLuminosidade() != null) ? 
-                    ultimaLuz.getLuminosidade() + "%" : "Desconhecida";
-            
-            Alerta alerta = Alerta.builder()
-                    .propriedade(dispositivo.getPropriedade())
-                    .leituraClima(ultimaClima)
-                    .leituraLuz(ultimaLuz)
-                    .tipo(TipoAlerta.IRRIGAR)
-                    .nivelRisco(ultimaClima.getUmidadeAr().doubleValue() < 20.0 ? NivelRisco.CRITICO : NivelRisco.ALTO)
-                    .mensagem("Umidade: " + ultimaClima.getUmidadeAr() + "%. Luz: " + luzStr)
-                    .recomendacao("Iniciar irrigação imediatamente considerando os fatores climáticos combinados.")
-                    .status(StatusAlerta.ATIVO)
-                    .dataGeracao(LocalDateTime.now())
-                    .build();
-            repository.save(alerta);
-            log.info("Alerta IRRIGAR gerado para propriedade id={} combinando Clima e Luz.", dispositivo.getPropriedade().getId());
+        Propriedade propriedade = propriedadeRepository.findById(dispositivo.getPropriedade().getId()).orElse(null);
+        if (propriedade == null) return;
+
+        double umidade = ultimaClima.getUmidadeAr() != null ? ultimaClima.getUmidadeAr().doubleValue() : 100.0;
+        
+        // 1. DADOS EXTERNOS DO INPE
+        double lat = propriedade.getCoordenadas() != null && propriedade.getCoordenadas().getLatitude() != null ? propriedade.getCoordenadas().getLatitude() : 0.0;
+        double lon = propriedade.getCoordenadas() != null && propriedade.getCoordenadas().getLongitude() != null ? propriedade.getCoordenadas().getLongitude() : 0.0;
+        
+        var respInpe = inpeClient.buscarFocosQueimada(lat, lon);
+        FonteExterna fonteInpe = obterOuCriarFonte("INPE BDQueimadas", new FonteExternaSatelital());
+        DadoExterno dadoInpe = DadoExterno.builder()
+                .fonteExterna(fonteInpe)
+                .tipo("FOCOS_QUEIMADA")
+                .valor(BigDecimal.valueOf(respInpe.getQuantidadeFocos()))
+                .dataColeta(LocalDateTime.now())
+                .observacao("Busca de queimadas na latitude " + lat + " e longitude " + lon)
+                .build();
+        dadoExternoRepository.save(dadoInpe);
+
+        // 2. DADOS EXTERNOS DA ANA
+        var respAna = anaClient.buscarNivelRio("EST-HIDRO-01");
+        FonteExterna fonteAna = obterOuCriarFonte("ANA Nível Rio", new FonteExternaApi());
+        DadoExterno dadoAna = DadoExterno.builder()
+                .fonteExterna(fonteAna)
+                .tipo("NIVEL_RIO")
+                .valor(BigDecimal.valueOf(respAna.getNivelMetros()))
+                .dataColeta(LocalDateTime.now())
+                .observacao("Medição do nível do rio próximo (" + respAna.getCodigoEstacao() + ")")
+                .build();
+        dadoExternoRepository.save(dadoAna);
+
+        // 3. MOTOR DE REGRAS DE NEGÓCIO COMBINADAS
+        int focos = respInpe.getQuantidadeFocos() != null ? respInpe.getQuantidadeFocos() : 0;
+        double nivelRio = respAna.getNivelMetros() != null ? respAna.getNivelMetros() : 5.0;
+
+        String luzStr = (ultimaLuz != null && ultimaLuz.getLuminosidade() != null) ? 
+                ultimaLuz.getLuminosidade() + "%" : "Desconhecida";
+
+        // Regra 1: Risco Crítico de Incêndio (Umidade Baixa + Focos do INPE)
+        if (umidade < 30.0 && focos > 0) {
+            gerarAlerta(propriedade, ultimaClima, ultimaLuz, dadoInpe, TipoAlerta.QUEIMADA, NivelRisco.CRITICO,
+                    "Risco de Incêndio! Umidade: " + umidade + "%, Focos (INPE): " + focos,
+                    "Acionar imediatamente os aspersores para umedecer o perímetro da fazenda.");
+            return; // Impede sobreposição
+        }
+
+        // Regra 2: Escassez Hídrica da ANA
+        if (nivelRio < 3.0) {
+            gerarAlerta(propriedade, ultimaClima, ultimaLuz, dadoAna, TipoAlerta.SECA, NivelRisco.ALTO,
+                    "Rio com nível baixo (ANA): " + String.format("%.2f", nivelRio) + "m. Umidade: " + umidade + "%",
+                    "Racionamento de água. Não ligar bombas pesadas para não esgotar as reservas hídricas regionais.");
+            return;
+        }
+
+        // Regra 3: Irrigação Padrão Cruzada
+        if (umidade < 40.0) {
+            gerarAlerta(propriedade, ultimaClima, ultimaLuz, dadoAna, TipoAlerta.IRRIGAR, NivelRisco.MEDIO,
+                    "Umidade abaixo do ideal: " + umidade + "%. Rio (ANA): " + String.format("%.2f", nivelRio) + "m",
+                    "Iniciar irrigação controlada. Condições hídricas externas favoráveis.");
         }
     }
 
+    private void gerarAlerta(Propriedade propriedade, LeituraClima clima, LeituraLuz luz, DadoExterno externo,
+                             TipoAlerta tipo, NivelRisco risco, String mensagem, String recomendacao) {
+        Alerta alerta = Alerta.builder()
+                .propriedade(propriedade)
+                .leituraClima(clima)
+                .leituraLuz(luz)
+                .dadoExterno(externo)
+                .tipo(tipo)
+                .nivelRisco(risco)
+                .mensagem(mensagem)
+                .recomendacao(recomendacao)
+                .status(StatusAlerta.ATIVO)
+                .dataGeracao(LocalDateTime.now())
+                .build();
+        repository.save(alerta);
+        log.info("🚨 [ALERTA GERADO] Tipo: {} | Risco: {} | Prop. ID: {}", tipo, risco, propriedade.getId());
+    }
+
+    private FonteExterna obterOuCriarFonte(String nome, FonteExterna defaultFonte) {
+        return fonteExternaRepository.findByNome(nome).orElseGet(() -> {
+            defaultFonte.setNome(nome);
+            defaultFonte.setStatus("ATIVO");
+            return fonteExternaRepository.save(defaultFonte);
+        });
+    }
+
     public void processarStatusIot(StatusPayload status, String macAddress) {
-        log.info("[DEBUG-MQTT] Recebido status IoT do MAC {} - Bomba Ativa: {}, Alerta Crítico: {}", 
-                macAddress, status.bombaAtiva(), status.alertaCritico());
         if (Boolean.TRUE.equals(status.alertaCritico())) {
-            log.warn("[DEBUG-MQTT] Status IoT indicou alerta crítico — aguardando avaliação do scheduler");
+            log.warn("🔥 [HW ALERT] ESP32 (MAC: {}) reportou superaquecimento local!", macAddress);
+        } else if (Boolean.TRUE.equals(status.bombaAtiva())) {
+            log.info("💧 [HW STATUS] Bomba D'água ATIVADA no MAC: {}", macAddress);
         }
     }
 }
