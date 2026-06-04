@@ -19,7 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         )
     )
 )
-@SpringBootApplication
+@SpringBootApplication(exclude = { org.springdoc.core.configuration.SpringDocHateoasConfiguration.class })
 @EnableScheduling
 public class HydrataApplication {
 

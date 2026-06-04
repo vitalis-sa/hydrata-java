@@ -12,8 +12,8 @@ public class OpenMeteoClient {
     @Value("${openmeteo.base-url:https://api.open-meteo.com/v1}")
     private String baseUrl;
 
-    public OpenMeteoClient(RestClient.Builder builder) {
-        this.restClient = builder.build();
+    public OpenMeteoClient() {
+        this.restClient = RestClient.create();
     }
 
     public DadosClimaResponse buscarClima(double latitude, double longitude) {

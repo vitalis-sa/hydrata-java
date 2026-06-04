@@ -7,6 +7,5 @@ import lombok.*;
 @DiscriminatorValue("SATELITE")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class FonteExternaSatelital extends FonteExterna {
 }

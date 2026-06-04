@@ -19,7 +19,7 @@ public class MqttMessageListener {
 
     private final LeituraService leituraService;
     private final AlertaService alertaService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public void handleMessage(Message<?> message) {

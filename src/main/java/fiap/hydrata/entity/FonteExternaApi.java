@@ -7,6 +7,5 @@ import lombok.*;
 @DiscriminatorValue("API_CLIMA")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class FonteExternaApi extends FonteExterna {
 }

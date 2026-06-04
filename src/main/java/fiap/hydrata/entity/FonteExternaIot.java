@@ -7,6 +7,5 @@ import lombok.*;
 @DiscriminatorValue("IOT")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class FonteExternaIot extends FonteExterna {
 }
