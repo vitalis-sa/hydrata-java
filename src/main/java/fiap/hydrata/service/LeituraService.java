@@ -43,7 +43,8 @@ public class LeituraService {
                 .build();
                 
         climaRepository.save(leitura);
-        log.info("☁️  [DB PERSIST] Leitura CLIMA salva com SUCESSO (Disp ID: {})", dispositivo.getId());
+        log.info("☁️  [DB PERSIST] Leitura CLIMA salva com SUCESSO - Temp: {}, Umidade: {} (Disp ID: {})",
+                leitura.getTemperatura(), leitura.getUmidadeAr(), dispositivo.getId());
     }
 
     @Transactional
@@ -63,6 +64,7 @@ public class LeituraService {
                 .build();
                 
         luzRepository.save(leitura);
-        log.info("☀️  [DB PERSIST] Leitura LUZ salva com SUCESSO (Disp ID: {})", dispositivo.getId());
+        log.info("☀️  [DB PERSIST] Leitura LUZ salva com SUCESSO - Luminosidade: {} (Disp ID: {})",
+                leitura.getLuminosidade(), dispositivo.getId());
     }
 }

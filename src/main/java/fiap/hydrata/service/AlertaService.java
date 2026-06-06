@@ -165,7 +165,8 @@ public class AlertaService {
                 .dataGeracao(LocalDateTime.now())
                 .build();
         repository.save(alerta);
-        log.info("🚨 [ALERTA GERADO] Tipo: {} | Risco: {} | Prop. ID: {}", tipo, risco, propriedade.getId());
+        log.info("🚨 [ALERTA GERADO] Tipo: {} | Risco: {} | Prop. ID: {} | Mensagem: {} | Recomendação: {}", 
+                tipo, risco, propriedade.getId(), mensagem, recomendacao);
     }
 
     private FonteExterna obterOuCriarFonte(String nome, FonteExterna defaultFonte) {
