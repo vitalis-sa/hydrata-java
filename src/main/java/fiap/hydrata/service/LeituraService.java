@@ -1,6 +1,5 @@
 package fiap.hydrata.service;
 
-import fiap.hydrata.entity.DispositivoIot;
 import fiap.hydrata.entity.LeituraClima;
 import fiap.hydrata.entity.LeituraLuz;
 import fiap.hydrata.mqtt.payload.ClimaPayload;

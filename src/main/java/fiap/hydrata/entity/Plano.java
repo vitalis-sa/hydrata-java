@@ -4,7 +4,6 @@ import fiap.hydrata.enums.StatusGeral;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PLANO")

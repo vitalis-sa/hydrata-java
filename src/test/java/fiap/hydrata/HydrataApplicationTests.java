@@ -28,22 +28,23 @@ class HydrataApplicationTests {
         
         try {
             String clientId = "test-client-" + System.currentTimeMillis();
-            MqttClient client = new MqttClient(brokerUrl, clientId);
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setCleanSession(true);
-            
-            if (username != null && !username.trim().isEmpty()) {
-                options.setUserName(username);
-                options.setPassword(password.toCharArray());
+            try (MqttClient client = new MqttClient(brokerUrl, clientId)) {
+                MqttConnectOptions options = new MqttConnectOptions();
+                options.setCleanSession(true);
+                
+                if (username != null && !username.trim().isEmpty()) {
+                    options.setUserName(username);
+                    options.setPassword(password.toCharArray());
+                }
+                
+                System.out.println("Tentando conectar...");
+                client.connect(options);
+                System.out.println("Conectado com sucesso!");
+                assertTrue(client.isConnected());
+                
+                client.disconnect();
+                System.out.println("Desconectado.");
             }
-            
-            System.out.println("Tentando conectar...");
-            client.connect(options);
-            System.out.println("Conectado com sucesso!");
-            assertTrue(client.isConnected());
-            
-            client.disconnect();
-            System.out.println("Desconectado.");
         } catch (Exception e) {
             System.err.println("ERRO DE CONEXÃO MQTT:");
             e.printStackTrace();

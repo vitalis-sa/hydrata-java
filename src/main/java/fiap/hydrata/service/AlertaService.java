@@ -37,6 +37,7 @@ public class AlertaService {
     private final InpeBdqueimadasClient inpeClient;
     private final DadoExternoRepository dadoExternoRepository;
     private final FonteExternaRepository fonteExternaRepository;
+    private final DispositivoIotRepository dispositivoIotRepository;
 
     public List<AlertaResponse> findAll() {
         return mapper.toResponseList(repository.findAll());
@@ -76,6 +77,11 @@ public class AlertaService {
                         () -> { throw new ResourceNotFoundException("Alerta não encontrado com id: " + id); }
                 );
         return DeleteResponse.of("Alerta", id);
+    }
+
+    @Transactional
+    public void avaliarEGerar(String macAddress) {
+        dispositivoIotRepository.findByMacAddress(macAddress).ifPresent(this::avaliarEGerar);
     }
 
     @Transactional
@@ -123,9 +129,6 @@ public class AlertaService {
         int focos = respInpe.getQuantidadeFocos() != null ? respInpe.getQuantidadeFocos() : 0;
         double nivelRio = respAna.getNivelMetros() != null ? respAna.getNivelMetros() : 5.0;
 
-        String luzStr = (ultimaLuz != null && ultimaLuz.getLuminosidade() != null) ? 
-                ultimaLuz.getLuminosidade() + "%" : "Desconhecida";
-
         // Regra 1: Risco Crítico de Incêndio (Umidade Baixa + Focos do INPE)
         if (umidade < 30.0 && focos > 0) {
             gerarAlerta(propriedade, ultimaClima, ultimaLuz, dadoInpe, TipoAlerta.QUEIMADA, NivelRisco.CRITICO,
@@ -152,6 +155,13 @@ public class AlertaService {
 
     private void gerarAlerta(Propriedade propriedade, LeituraClima clima, LeituraLuz luz, DadoExterno externo,
                              TipoAlerta tipo, NivelRisco risco, String mensagem, String recomendacao) {
+        
+        Alerta ultimoAlerta = repository.findFirstByPropriedadeIdOrderByIdDesc(propriedade.getId()).orElse(null);
+        if (ultimoAlerta != null && ultimoAlerta.getTipo() == tipo && ultimoAlerta.getNivelRisco() == risco) {
+            // Ignora o alerta se for idêntico ao último (deduplicação)
+            return;
+        }
+
         Alerta alerta = Alerta.builder()
                 .propriedade(propriedade)
                 .leituraClima(clima)
@@ -167,6 +177,29 @@ public class AlertaService {
         repository.save(alerta);
         log.info("🚨 [ALERTA GERADO] Tipo: {} | Risco: {} | Prop. ID: {} | Mensagem: {} | Recomendação: {}", 
                 tipo, risco, propriedade.getId(), mensagem, recomendacao);
+    }
+
+    @Transactional
+    public void registrarAlertaOffline(DispositivoIot dispositivo) {
+        Propriedade propriedade = propriedadeRepository.findById(dispositivo.getPropriedade().getId()).orElse(null);
+        if (propriedade == null) return;
+
+        Alerta ultimoAlerta = repository.findFirstByPropriedadeIdOrderByIdDesc(propriedade.getId()).orElse(null);
+        if (ultimoAlerta != null && ultimoAlerta.getTipo() == TipoAlerta.DISPOSITIVO_OFFLINE) {
+            return;
+        }
+
+        Alerta alerta = Alerta.builder()
+                .propriedade(propriedade)
+                .tipo(TipoAlerta.DISPOSITIVO_OFFLINE)
+                .nivelRisco(NivelRisco.ALTO)
+                .mensagem("O sensor parou de enviar leituras (Time-out). Verifique a conectividade ou energia no local.")
+                .recomendacao("Inspecione o hardware ESP32 na propriedade para restaurar a telemetria.")
+                .status(StatusAlerta.ATIVO)
+                .dataGeracao(LocalDateTime.now())
+                .build();
+        repository.save(alerta);
+        log.warn("🚨 [SENSOR OFFLINE] Propriedade ID: {}", propriedade.getId());
     }
 
     private FonteExterna obterOuCriarFonte(String nome, FonteExterna defaultFonte) {

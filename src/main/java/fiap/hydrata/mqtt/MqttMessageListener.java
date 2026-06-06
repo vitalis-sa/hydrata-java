@@ -8,7 +8,6 @@ import fiap.hydrata.service.AlertaService;
 import fiap.hydrata.service.LeituraService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
@@ -51,10 +50,12 @@ public class MqttMessageListener {
                 case "CLIMA" -> {
                     ClimaPayload clima = objectMapper.readValue(payload, ClimaPayload.class);
                     leituraService.salvarDeClima(clima, macAddress);
+                    alertaService.avaliarEGerar(macAddress);
                 }
                 case "LUZ" -> {
                     LuzPayload luz = objectMapper.readValue(payload, LuzPayload.class);
                     leituraService.salvarDeLuz(luz, macAddress);
+                    alertaService.avaliarEGerar(macAddress);
                 }
                 case "STATUS" -> {
                     StatusPayload status = objectMapper.readValue(payload, StatusPayload.class);

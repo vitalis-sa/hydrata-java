@@ -1,6 +1,5 @@
 package fiap.hydrata.mapper;
 
-import fiap.hydrata.dto.request.FonteExternaRequest;
 import fiap.hydrata.dto.response.FonteExternaResponse;
 import fiap.hydrata.entity.FonteExterna;
 import fiap.hydrata.entity.FonteExternaApi;
