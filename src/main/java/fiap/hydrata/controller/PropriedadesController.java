@@ -33,6 +33,13 @@ public class PropriedadesController {
         return ResponseEntity.ok(service.findAll());
     }
 
+    @Operation(summary = "Listar propriedades de um produtor")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso") })
+    @GetMapping("/produtor/{produtorId}")
+    public ResponseEntity<List<PropriedadeResponse>> getPropriedadesByIdDoProdutor(@PathVariable Long produtorId) {
+        return ResponseEntity.ok(service.findByProdutorId(produtorId));
+    }
+
     @Operation(summary = "Buscar propriedade por ID")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Propriedade encontrada"),

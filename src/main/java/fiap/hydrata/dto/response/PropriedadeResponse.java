@@ -39,6 +39,9 @@ public class PropriedadeResponse {
     @Schema(description = "Nome do produtor", example = "João da Silva")
     private String nomeProdutor;
 
+    @Schema(description = "ID do produtor", example = "1")
+    private Long produtorId;
+
     @Schema(description = "Nome do plano", example = "Plano Premium")
     private String nomePlano;
 }

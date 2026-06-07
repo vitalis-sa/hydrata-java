@@ -24,6 +24,7 @@ public interface PropriedadeMapper {
     Propriedade toEntity(PropriedadeRequest request);
 
     @Mapping(source = "produtor.nome", target = "nomeProdutor")
+    @Mapping(source = "produtor.id", target = "produtorId")
     @Mapping(source = "plano.nome", target = "nomePlano")
     @Mapping(source = "coordenadas.latitude", target = "latitude")
     @Mapping(source = "coordenadas.longitude", target = "longitude")

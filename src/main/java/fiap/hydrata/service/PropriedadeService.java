@@ -30,6 +30,10 @@ public class PropriedadeService {
         return mapper.toResponseList(repository.findAll());
     }
 
+    public List<PropriedadeResponse> findByProdutorId(Long produtorId) {
+        return mapper.toResponseList(repository.findByProdutorId(produtorId));
+    }
+
     public PropriedadeResponse findById(Long id) {
         return repository.findById(id)
                 .map(mapper::toResponse)
