@@ -9,6 +9,8 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
 
 // ---------- PINAGEM ----------
 #define DHTPIN 15
@@ -45,9 +47,14 @@ PubSubClient client(espClient);
 // ---------- VARIÁVEIS GLOBAIS DE TIMING ----------
 unsigned long tempoAnteriorCarrossel = 0;
 unsigned long tempoAnteriorMQTT = 0;
+unsigned long tempoAnteriorOpenMeteo = 0;
 
 const long intervaloCarrossel = 3000; // Alterna o LCD a cada 3 segundos
-const long intervaloMQTT = 1000;      // Envia dados ao broker a cada 5 segundos
+const long intervaloMQTT = 5000;      // Envia dados ao broker a cada 5 segundos
+const long intervaloOpenMeteo = 10000; // Consulta a API externa a cada 10 segundos
+
+float precipitacaoExterna = 0.0;
+float temperaturaExterna = 0.0;
 
 int telaAtual = 0;
 
@@ -135,6 +142,8 @@ void setup() {
   setup_wifi();
   espClient.setInsecure(); // Permite conexão TLS na nuvem HiveMQ sem validação de certificado local estático
   client.setServer(mqtt_server, mqtt_port);
+
+  client.setKeepAlive(60);
 }
 
 void loop() {
@@ -161,9 +170,33 @@ void loop() {
     return;
   }
 
-  // 2. REGRAS DE NEGÓCIO LOCAIS (Gatilhos de Atuadores)
-  // Regra da Bomba de Irrigação (LED Azul)
-  if (umidadeAr < 40.0 && luminosidade > 70) {
+  unsigned long tempoAtual = millis();
+
+  // 1.5 DADOS EXTERNOS OPENMETEO
+  if (tempoAtual - tempoAnteriorOpenMeteo >= intervaloOpenMeteo) {
+    tempoAnteriorOpenMeteo = tempoAtual;
+    if(WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+      String url = "https://api.open-meteo.com/v1/forecast?latitude=-23.5612&longitude=-46.6541&current=temperature_2m,precipitation";
+      http.begin(url);
+      int httpCode = http.GET();
+      if(httpCode > 0) {
+        String payload = http.getString();
+        StaticJsonDocument<1024> doc;
+        DeserializationError error = deserializeJson(doc, payload);
+        if(!error) {
+          precipitacaoExterna = doc["current"]["precipitation"];
+          temperaturaExterna = doc["current"]["temperature_2m"];
+          Serial.printf("OpenMeteo API -> Temp Externa: %.1fC | Chuva: %.1fmm\n", temperaturaExterna, precipitacaoExterna);
+        }
+      }
+      http.end();
+    }
+  }
+
+  // 2. REGRAS DE NEGÓCIO LOCAIS (Replicadas do Backend)
+  // Regra de Irrigação (LED Azul): Umidade baixa (< 40), Sol forte e SEM previsão de chuva na API
+  if (umidadeAr < 40.0 && luminosidade > 70 && precipitacaoExterna == 0.0) {
     bombaLigada = true;
     digitalWrite(LED_BOMBA, HIGH);
   } else {
@@ -171,16 +204,15 @@ void loop() {
     digitalWrite(LED_BOMBA, LOW);
   }
 
-  // Regra de Alerta Crítico Climático (LED Vermelho)
-  if (temperatura >= 38.0) {
+  // Regra de Alerta Crítico / Queimada (LED Vermelho)
+  // Replicando a lógica do Java: Se a umidade < 30 (Seca Crítica) OU Temperatura extrema (> 38)
+  if (temperatura >= 38.0 || temperaturaExterna >= 38.0 || umidadeAr < 30.0) {
     alertaLigado = true;
     digitalWrite(LED_ALERTA, HIGH);
   } else {
     alertaLigado = false;
     digitalWrite(LED_ALERTA, LOW);
   }
-
-  unsigned long tempoAtual = millis();
 
 // 3. ENVIO DOS DADOS VIA MQTT (Executado a cada 5 segundos em 3 tópicos distintos)
   if (tempoAtual - tempoAnteriorMQTT >= intervaloMQTT) {
