@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface DispositivoIotRepository extends JpaRepository<DispositivoIot, Long> {
     List<DispositivoIot> findByStatus(fiap.hydrata.enums.StatusSensor status);
     Optional<DispositivoIot> findByMacAddress(String macAddress);
+    Optional<DispositivoIot> findByPropriedadeId(Long propriedadeId);
 }

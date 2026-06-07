@@ -43,6 +43,18 @@ public class AlertaService {
         return mapper.toResponseList(repository.findAll());
     }
 
+    public List<AlertaResponse> findByPropriedade(Long propriedadeId, String tipo) {
+        if (tipo != null && !tipo.isBlank()) {
+            try {
+                TipoAlerta enumTipo = TipoAlerta.valueOf(tipo.toUpperCase());
+                return mapper.toResponseList(repository.findByPropriedadeIdAndTipoOrderByDataGeracaoDesc(propriedadeId, enumTipo));
+            } catch (IllegalArgumentException e) {
+                return List.of();
+            }
+        }
+        return mapper.toResponseList(repository.findByPropriedadeIdOrderByDataGeracaoDesc(propriedadeId));
+    }
+
     public AlertaResponse findById(Long id) {
         return repository.findById(id)
                 .map(mapper::toResponse)
@@ -142,6 +154,14 @@ public class AlertaService {
             gerarAlerta(propriedade, ultimaClima, ultimaLuz, dadoAna, TipoAlerta.SECA, NivelRisco.ALTO,
                     "Rio com nível baixo (ANA): " + String.format("%.2f", nivelRio) + "m. Umidade: " + umidade + "%",
                     "Racionamento de água. Não ligar bombas pesadas para não esgotar as reservas hídricas regionais.");
+            return;
+        }
+
+        // Regra 2.5: Enchente
+        if (nivelRio > 5.0) {
+            gerarAlerta(propriedade, ultimaClima, ultimaLuz, dadoAna, TipoAlerta.ENCHENTE, NivelRisco.ALTO,
+                    "Nível do rio subindo rapidamente (ANA): " + String.format("%.2f", nivelRio) + "m.",
+                    "Proteja equipamentos das áreas baixas.");
             return;
         }
 

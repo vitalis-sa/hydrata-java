@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface LeituraClimaRepository extends JpaRepository<LeituraClima, Long> {
     List<LeituraClima> findByDispositivoIotId(Long dispositivoIotId);
     Optional<LeituraClima> findFirstByDispositivoIotIdOrderByIdDesc(Long dispositivoIotId);
+    List<LeituraClima> findByDispositivoIotIdAndDataLeituraAfterOrderByDataLeituraDesc(Long dispositivoIotId, java.time.LocalDateTime data);
 }

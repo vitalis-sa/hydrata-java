@@ -33,6 +33,15 @@ public class AlertasController {
         return ResponseEntity.ok(service.findAll());
     }
 
+    @Operation(summary = "Listar alertas de uma propriedade (com filtro opcional por tipo)")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso") })
+    @GetMapping("/propriedade/{propriedadeId}")
+    public ResponseEntity<List<AlertaResponse>> findByPropriedade(
+            @PathVariable Long propriedadeId, 
+            @RequestParam(required = false) String tipo) {
+        return ResponseEntity.ok(service.findByPropriedade(propriedadeId, tipo));
+    }
+
     @Operation(summary = "Buscar alerta por ID")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Alerta encontrado"),

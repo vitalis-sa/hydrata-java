@@ -13,4 +13,6 @@ import java.util.Optional;
 public interface AlertaRepository extends JpaRepository<Alerta, Long> {
     List<Alerta> findByPropriedadeIdAndStatus(Long propriedadeId, StatusAlerta status);
     Optional<Alerta> findFirstByPropriedadeIdOrderByIdDesc(Long propriedadeId);
+    List<Alerta> findByPropriedadeIdOrderByDataGeracaoDesc(Long propriedadeId);
+    List<Alerta> findByPropriedadeIdAndTipoOrderByDataGeracaoDesc(Long propriedadeId, fiap.hydrata.enums.TipoAlerta tipo);
 }
