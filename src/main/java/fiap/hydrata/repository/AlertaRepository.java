@@ -15,4 +15,5 @@ public interface AlertaRepository extends JpaRepository<Alerta, Long> {
     Optional<Alerta> findFirstByPropriedadeIdOrderByIdDesc(Long propriedadeId);
     List<Alerta> findByPropriedadeIdOrderByDataGeracaoDesc(Long propriedadeId);
     List<Alerta> findByPropriedadeIdAndTipoOrderByDataGeracaoDesc(Long propriedadeId, fiap.hydrata.enums.TipoAlerta tipo);
+    void deleteByPropriedadeId(Long propriedadeId);
 }

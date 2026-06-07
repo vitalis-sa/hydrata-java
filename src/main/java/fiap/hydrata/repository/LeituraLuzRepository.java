@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface LeituraLuzRepository extends JpaRepository<LeituraLuz, Long> {
     List<LeituraLuz> findByDispositivoIotId(Long dispositivoIotId);
     Optional<LeituraLuz> findFirstByDispositivoIotIdOrderByIdDesc(Long dispositivoIotId);
+    void deleteByDispositivoIotId(Long dispositivoIotId);
 }
