@@ -488,23 +488,23 @@ curl "http://localhost:8080/api/leituras/historico/1?dias=7"
 | Open-Meteo Docs | https://open-meteo.com/en/docs |
 | ANA HidroWeb | https://www.snirh.gov.br/hidroweb |
 | INPE BDQueimadas | https://queimadas.dgi.inpe.br/queimadas/bdqueimadas |
-| Repositório GitHub | `[adicionar link]` |
-| Vídeo demonstração | `[adicionar link]` |
+| Vídeo demonstração | [link](https://youtu.be/bpoYou45T6s) |
 | Vídeo pitch | `[adicionar link]` |
 
 ---
 
 ## Equipe
 
-| Nome | RM | Disciplina |
-|---|---|---|
-| `[Nome]` | `[RM]` | Java Advanced |
-| `[Nome]` | `[RM]` | .NET |
-| `[Nome]` | `[RM]` | DevOps & Cloud |
-| `[Nome]` | `[RM]` | IoT & IA Generativa |
-| `[Nome]` | `[RM]` | Banco de Dados |
-| `[Nome]` | `[RM]` | Mobile React Native |
-| `[Nome]` | `[RM]` | Compliance & Arquitetura |
+| Nome | RM |
+|---|---|
+| Ana Flávia Camelo | RM561489 |
+| Gustavo Kenji Terada | RM562745 |
+| João Guilherme Carvalho Novaes | RM566234 |
+| Pedro Chasci Puga | RM565154 |
+| Lucas Figueiredo Vieira | RM561342 |
+
+**Professor:** Marcel Stefan Wagner  
+**Matéria/Disciplina:** Java Advanced
 
 ---
 

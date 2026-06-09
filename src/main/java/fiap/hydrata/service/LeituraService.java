@@ -1,5 +1,7 @@
 package fiap.hydrata.service;
 
+import fiap.hydrata.dto.response.LeituraClimaResponse;
+import fiap.hydrata.entity.DispositivoIot;
 import fiap.hydrata.entity.LeituraClima;
 import fiap.hydrata.entity.LeituraLuz;
 import fiap.hydrata.mqtt.payload.ClimaPayload;
@@ -14,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,5 +70,25 @@ public class LeituraService {
         luzRepository.save(leitura);
         log.info("☀️  [DB PERSIST] Leitura LUZ salva com SUCESSO - Luminosidade: {} (Disp ID: {})",
                 leitura.getLuminosidade(), dispositivo.getId());
+    }
+
+    public List<LeituraClimaResponse> getHistorico(Long propriedadeId, int dias) {
+        Optional<DispositivoIot> dispositivoOpt = dispositivoIotRepository.findByPropriedadeId(propriedadeId);
+        if (dispositivoOpt.isEmpty()) {
+            return List.of();
+        }
+
+        LocalDateTime dataCorte = LocalDateTime.now().minusDays(dias);
+        var leituras = climaRepository.findByDispositivoIotIdAndDataLeituraAfterOrderByDataLeituraDesc(dispositivoOpt.get().getId(), dataCorte);
+
+        return leituras.stream()
+                .map(l -> LeituraClimaResponse.builder()
+                        .id(l.getId())
+                        .dispositivoIotId(l.getDispositivoIot().getId())
+                        .umidadeAr(l.getUmidadeAr())
+                        .temperatura(l.getTemperatura())
+                        .dataLeitura(l.getDataLeitura())
+                        .build())
+                .collect(Collectors.toList());
     }
 }
