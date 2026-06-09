@@ -488,8 +488,8 @@ curl "http://localhost:8080/api/leituras/historico/1?dias=7"
 | Open-Meteo Docs | https://open-meteo.com/en/docs |
 | ANA HidroWeb | https://www.snirh.gov.br/hidroweb |
 | INPE BDQueimadas | https://queimadas.dgi.inpe.br/queimadas/bdqueimadas |
-| Vídeo demonstração | [hydrata yt](https://youtu.be/bpoYou45T6s) |
-| Vídeo pitch | `[adicionar link]` |
+| Vídeo demonstração | [hydrata java demonstration](link) |
+| Vídeo pitch | [hydrata pitch](https://youtu.be/bpoYou45T6s) |
 
 ---
 
